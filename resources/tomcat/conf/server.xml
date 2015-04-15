@@ -29,6 +29,13 @@
             <Host name='localhost'>
                 <Listener className="com.gopivotal.cloudfoundry.tomcat.lifecycle.ApplicationStartupFailureDetectingLifecycleListener"/>
             </Host>
+			
+			  <Realm className="org.apache.catalina.realm.JAASRealm" 
+					   appName="BLRealm"
+				userClassNames="ch.swisscom.loginmodule.data.BLJaasPrincipalImpl"
+				roleClassNames="ch.swisscom.loginmodule.data.BLGroup">
+			  </Realm>
+			
         </Engine>
     </Service>
 
