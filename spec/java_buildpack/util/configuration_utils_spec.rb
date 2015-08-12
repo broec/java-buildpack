@@ -16,6 +16,7 @@
 
 require 'java_buildpack/util'
 require 'java_buildpack/util/configuration_utils'
+require 'fileutils'
 require 'logging_helper'
 require 'pathname'
 require 'spec_helper'
@@ -24,24 +25,43 @@ require 'yaml'
 describe JavaBuildpack::Util::ConfigurationUtils do
   include_context 'logging_helper'
 
+  let(:test_data) do
+    { 'foo'      => { 'one' => '1', 'two' => 2 },
+      'bar'      => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
+      'version'  => '1.7.1',
+      'not_here' => nil
+    }
+  end
+
   it 'not load absent configuration file' do
     allow_any_instance_of(Pathname).to receive(:exist?).and_return(false)
     expect(described_class.load('test')).to eq({})
+  end
+
+  it 'write configuration file' do
+    test_file        = Pathname.new(File.expand_path('../../../config/open_jdk_jre.yml', File.dirname(__FILE__)))
+    original_content = file_contents test_file
+    loaded_content   = described_class.load('open_jdk_jre', false)
+    described_class.write('open_jdk_jre', loaded_content)
+    expect(described_class.load('open_jdk_jre', false)).to eq(loaded_content)
+    expect(file_contents test_file).to eq(original_content)
   end
 
   context do
 
     before do
       allow_any_instance_of(Pathname).to receive(:exist?).and_return(true)
-      allow(YAML).to receive(:load_file).and_return('foo' => { 'one' => '1', 'two' => 2 },
-                                                    'bar' => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
-                                                    'version' => '1.7.1')
+      allow(YAML).to receive(:load_file).and_return(test_data)
     end
 
     it 'load configuration file' do
-      expect(described_class.load('test')).to eq('foo' => { 'one' => '1', 'two' => 2 },
-                                                 'bar' => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
-                                                 'version' => '1.7.1')
+      expect(described_class.load('test', false)).to eq(test_data)
+    end
+
+    it 'load configuration file and clean nil values' do
+      expect(described_class.load('test', true)).to eq('foo'      => { 'one' => '1', 'two' => 2 },
+                                                       'bar'      => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
+                                                       'version'  => '1.7.1')
     end
 
     context do
@@ -52,8 +72,8 @@ describe JavaBuildpack::Util::ConfigurationUtils do
 
       it 'overlays matching environment variables' do
 
-        expect(described_class.load('test')).to eq('foo' => { 'one' => '1', 'two' => 2 },
-                                                   'bar' => { 'alpha' => { 'one' => 3, 'two' => 'dog' } },
+        expect(described_class.load('test')).to eq('foo'     => { 'one' => '1', 'two' => 2 },
+                                                   'bar'     => { 'alpha' => { 'one' => 3, 'two' => 'dog' } },
                                                    'version' => '1.7.1')
       end
 
@@ -66,8 +86,8 @@ describe JavaBuildpack::Util::ConfigurationUtils do
       end
 
       it 'overlays simple matching environment variable' do
-        expect(described_class.load('test')).to eq('foo' => { 'one' => '1', 'two' => 2 },
-                                                   'bar' => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
+        expect(described_class.load('test')).to eq('foo'     => { 'one' => '1', 'two' => 2 },
+                                                   'bar'     => { 'alpha' => { 'one' => 'cat', 'two' => 'dog' } },
                                                    'version' => '1.8.+')
       end
 
@@ -85,6 +105,19 @@ describe JavaBuildpack::Util::ConfigurationUtils do
 
     end
 
+  end
+
+  private
+
+  def file_contents(file)
+    header = []
+    File.open(file, 'r') do |f|
+      f.each do |line|
+        break if line =~ /^---/
+        header << line
+      end
+    end
+    header
   end
 
 end
