@@ -26,7 +26,7 @@ module JavaBuildpack
 
       # (see JavaBuildpack::Component::BaseComponent#compile)
       def compile
-        download_zip false
+        download_zip(false, @droplet.sandbox, 'AppDynamics Agent')
         @droplet.copy_resources
       end
 
@@ -55,7 +55,7 @@ module JavaBuildpack
 
       private
 
-      FILTER = /app-dynamics/.freeze
+      FILTER = /app[-]?dynamics/.freeze
 
       private_constant :FILTER
 
@@ -97,7 +97,8 @@ module JavaBuildpack
       end
 
       def tier_name(java_opts, credentials)
-        name = credentials['tier-name'] || @configuration['default_tier_name']
+        name = credentials['tier-name'] || @configuration['default_tier_name'] ||
+          @application.details['application_name']
         java_opts.add_system_property('appdynamics.agent.tierName', "#{name}")
       end
 
