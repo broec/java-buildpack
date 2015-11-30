@@ -31,12 +31,14 @@
       <w>isengard</w>
       <w>javaagent</w>
       <w>jdk's</w>
+      <w>jmxremote</w>
       <w>jrebel</w>
       <w>jres</w>
       <w>jsome</w>
       <w>jtest</w>
       <w>killjava</w>
       <w>libcryptoki</w>
+      <w>libyjpagent</w>
       <w>ljust</w>
       <w>lunaclient</w>
       <w>mainclass</w>
@@ -70,6 +72,7 @@
       <w>rubocop</w>
       <w>safenet</w>
       <w>scriptdir</w>
+      <w>sessionname</w>
       <w>shellwords</w>
       <w>simplecov</w>
       <w>socketfactory</w>

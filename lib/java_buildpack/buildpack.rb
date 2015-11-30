@@ -104,6 +104,7 @@ module JavaBuildpack
       @buildpack_version = BuildpackVersion.new
 
       log_environment_variables
+      log_application_contents application
 
       mutable_java_home   = Component::MutableJavaHome.new
       immutable_java_home = Component::ImmutableJavaHome.new mutable_java_home, app_dir
@@ -165,6 +166,15 @@ module JavaBuildpack
                                                 component_info['java_opts'], component_info['app_dir'])
         }
         component.constantize.new(context)
+      end
+    end
+
+    def log_application_contents(application)
+      @logger.debug do
+        paths = []
+        application.root.find { |f| paths << f.relative_path_from(application.root).to_s }
+
+        "Application Contents: #{paths}"
       end
     end
 
